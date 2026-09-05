@@ -2,6 +2,10 @@ const EARTH_RADIUS_KM = 6371;
 
 async function routeBetween(origin, destination) {
   const fallback = fallbackRoute(origin, destination);
+  if (process.env.MAP_PROVIDER === 'mapbox' && process.env.MAPBOX_ACCESS_TOKEN) {
+    const mapbox = await mapboxRoute(origin, destination);
+    if (mapbox) return mapbox;
+  }
   const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) });
@@ -12,6 +16,20 @@ async function routeBetween(origin, destination) {
     return { distance_km: Number((route.distance / 1000).toFixed(2)), duration_seconds: Math.round(route.duration), geometry: route.geometry };
   } catch {
     return fallback;
+  }
+}
+
+async function mapboxRoute(origin, destination) {
+  const coordinates = `${origin.lng},${origin.lat};${destination.lng},${destination.lat}`;
+  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?overview=full&geometries=geojson&access_token=${encodeURIComponent(process.env.MAPBOX_ACCESS_TOKEN)}`;
+  try {
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const route = data.routes?.[0];
+    return route ? { distance_km: Number((route.distance / 1000).toFixed(2)), duration_seconds: Math.round(route.duration), geometry: route.geometry } : null;
+  } catch {
+    return null;
   }
 }
 

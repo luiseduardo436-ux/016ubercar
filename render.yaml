@@ -25,7 +25,9 @@ services:
           name: 016ubercar-redis
           property: connectionString
       - key: MAP_PROVIDER
-        value: osrm
+        value: mapbox
+      - key: MAPBOX_ACCESS_TOKEN
+        sync: false
       - key: STORAGE_PROVIDER
         value: local
       - key: JWT_SECRET
@@ -33,6 +35,12 @@ services:
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SMS_PROVIDER
+        value: zenvia
+      - key: ZENVIA_API_TOKEN
+        sync: false
+      - key: ZENVIA_FROM
         sync: false
 
   - type: redis

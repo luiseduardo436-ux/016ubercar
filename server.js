@@ -11,6 +11,7 @@ const { enabled: azureStorageEnabled, uploadDocument } = require('./storage/azur
 const { createInfrastructure } = require('./infra');
 const { rankDrivers } = require('./matching');
 const { routeBetween } = require('./map-service');
+const { sendOtp } = require('./notifications');
 
 const PORT = Number(process.env.PORT || 3000);
 const publicDir = path.join(__dirname, 'public');
@@ -177,9 +178,12 @@ const server = http.createServer(async (request, response) => {
       const phone = String(body.phone || '').replace(/\D/g, '');
       if (phone.length < 10) return json(response, 400, { error: 'Informe um celular válido' });
       if (!rateLimitAuth(phone)) return json(response, 429, { error: 'Limite de tentativas atingido. Tente novamente mais tarde.' });
-      if (process.env.NODE_ENV === 'production' && !process.env.SMS_PROVIDER) return json(response, 503, { error: 'Provedor de SMS ainda não configurado' });
-      const code = '016016';
+      if (process.env.NODE_ENV === 'production' && process.env.SMS_PROVIDER !== 'zenvia') return json(response, 503, { error: 'Configure SMS_PROVIDER=zenvia para ativar o login real' });
+      const code = process.env.NODE_ENV === 'production' ? String(crypto.randomInt(100000, 1000000)) : '016016';
       loginCodes.set(phone, code);
+      if (process.env.NODE_ENV === 'production') {
+        try { await sendOtp(phone, code); } catch (error) { loginCodes.delete(phone); return json(response, 502, { error: `Falha ao enviar SMS: ${error.message}` }); }
+      }
       return json(response, 200, { accepted: true, channel: 'sms_or_whatsapp', ...(process.env.NODE_ENV !== 'production' ? { demo_code: code } : {}) });
     }
     if (request.method === 'POST' && url.pathname === '/v1/passengers/register') {

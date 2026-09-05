@@ -18,6 +18,10 @@ ADMIN_PASSWORD_HASH=hash-bcrypt-da-senha
 SMS_PROVIDER=seu-provedor-de-sms
 MAP_PROVIDER=osrm
 STORAGE_PROVIDER=local
+MAPBOX_ACCESS_TOKEN=token-do-mapbox
+SMS_PROVIDER=zenvia
+ZENVIA_API_TOKEN=token-da-zenvia
+ZENVIA_FROM=016Ubercar
 ```
 
 O Render executa `npm run migrate` antes do deploy para aplicar `database/schema.sql`. O PostgreSQL precisa oferecer PostGIS. O serviço precisa ter PostgreSQL persistente e Redis persistente; não use os containers locais em produção.
@@ -28,9 +32,10 @@ O Render executa `npm run migrate` antes do deploy para aplicar `database/schema
 2. No Render, selecione **New > Blueprint** e escolha o repositório.
 3. O arquivo `render.yaml` criará o serviço web, PostgreSQL e Redis.
 4. Preencha `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` e `SMS_PROVIDER` quando o Render solicitar.
-5. Faça um deploy e confirme `GET /health`.
-6. No painel do domínio, crie os registros DNS mostrados em **Settings > Custom Domains**.
-7. Aguarde o certificado HTTPS e acesse `https://016ubercar.com.br/admin-login.html`.
+5. Preencha `MAPBOX_ACCESS_TOKEN`, `ZENVIA_API_TOKEN` e `ZENVIA_FROM` para ativar rota comercial e OTP real.
+6. Faça um deploy e confirme `GET /health`.
+7. No painel do domínio, crie os registros DNS mostrados em **Settings > Custom Domains**.
+8. Aguarde o certificado HTTPS e acesse `https://016ubercar.com.br/admin-login.html`.
 
 O plano gratuito do Render pode suspender o serviço por inatividade. Para operação real com corridas, use um plano pago e armazenamento externo para documentos.
 
