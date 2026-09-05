@@ -39,6 +39,7 @@ services:
     plan: free
     region: ohio
     maxmemoryPolicy: noeviction
+    ipAllowList: []
 
 databases:
   - name: 016ubercar-db
