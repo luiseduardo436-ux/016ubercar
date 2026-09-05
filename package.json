@@ -5,6 +5,7 @@
   "description": "MVP demonstrável do 016 Ubercar com API estilo Uber",
   "scripts": {
     "start": "node server.js",
+    "migrate": "node migrate.js",
     "test": "node --test"
   },
   "dependencies": {

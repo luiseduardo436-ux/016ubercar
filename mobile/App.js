@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, SafeAreaView, StyleSheet, Text, Te
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://zero16ubercar.onrender.com';
 const fallbackOrigin = { latitude: -21.1775, longitude: -47.8103 };
 const fallbackDestination = { latitude: -21.1848, longitude: -47.8087 };
 
@@ -12,6 +12,7 @@ export default function App() {
   const [destination, setDestination] = useState('RibeirãoShopping, Ribeirão Preto - SP');
   const [route, setRoute] = useState([fallbackOrigin, fallbackDestination]);
   const [distance, setDistance] = useState(4.52);
+  const [coordinates, setCoordinates] = useState({ start: fallbackOrigin, end: fallbackDestination });
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,12 +30,13 @@ export default function App() {
     setLoading(true);
     const start = await geocode(origin, fallbackOrigin);
     const end = await geocode(destination, fallbackDestination);
+    setCoordinates({ start, end });
     try {
-      const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson`);
+      const response = await fetch(`${API_URL}/v1/maps/route?start_lat=${start.latitude}&start_lng=${start.longitude}&end_lat=${end.latitude}&end_lng=${end.longitude}`);
       const data = await response.json();
-      const points = data.routes?.[0]?.geometry?.coordinates?.map(([longitude, latitude]) => ({ latitude, longitude }));
+      const points = data.geometry?.coordinates?.map(([longitude, latitude]) => ({ latitude, longitude }));
       setRoute(points?.length ? points : [start, end]);
-      if (data.routes?.[0]) setDistance(Number((data.routes[0].distance / 1000).toFixed(2)));
+      if (data.distance_km) setDistance(Number(data.distance_km));
     } catch { setRoute([start, end]); }
     setLoading(false);
   }
@@ -42,7 +44,7 @@ export default function App() {
   async function requestRide() {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/v1/requests`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '016-comfort', payment_method_id: 'pix', distance_km: distance }) });
+      const response = await fetch(`${API_URL}/v1/requests`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '016-comfort', payment_method_id: 'pix', distance_km: distance, start_lat: coordinates.start.latitude, start_lng: coordinates.start.longitude, end_lat: coordinates.end.latitude, end_lng: coordinates.end.longitude }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível solicitar a corrida');
       setRide({ request_id: data.request_id, status: data.status, amount: data.estimate.amount });

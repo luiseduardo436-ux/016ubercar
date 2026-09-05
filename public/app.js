@@ -94,8 +94,9 @@ function statusText(ride) {
 
 async function refreshRide() {
   if (!activeRide) return;
-  const response = await fetch(`/v1/requests/${activeRide}`);
+  const response = await fetch(`/v1/requests/${activeRide}`, { headers: { Authorization: `Bearer ${sessionStorage.getItem('passenger_token') || ''}` } });
   const ride = await response.json();
+  if (response.status === 401) { window.location.href = `/login.html?return=${encodeURIComponent(window.location.pathname)}`; return; }
   if (!response.ok) return;
   statusBox.innerHTML = `<strong>${statusText(ride)}</strong>${ride.status === 'driver_en_route' ? '<br>Placa RBT-6A16 · Nota 4,96' : ''}`;
   if (ride.driver?.location && map) {
@@ -112,9 +113,10 @@ async function refreshRide() {
 
 requestButton.addEventListener('click', async () => {
   try {
+    if (!sessionStorage.getItem('passenger_token')) { window.location.href = '/login.html?return=/'; return; }
     requestButton.disabled = true;
     requestButton.textContent = 'Solicitando...';
-    const response = await fetch('/v1/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '016-comfort', payment_method_id: 'pix', distance_km: routeDistanceKm, start_lat: selectedRoute?.origin[0], start_lng: selectedRoute?.origin[1], end_lat: selectedRoute?.destination[0], end_lng: selectedRoute?.destination[1] }) });
+    const response = await fetch('/v1/requests', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionStorage.getItem('passenger_token')}` }, body: JSON.stringify({ product_id: '016-comfort', payment_method_id: 'pix', distance_km: routeDistanceKm, start_lat: selectedRoute?.origin[0], start_lng: selectedRoute?.origin[1], end_lat: selectedRoute?.destination[0], end_lng: selectedRoute?.destination[1] }) });
     if (!response.ok) throw new Error('Não foi possível solicitar a corrida');
     const ride = await response.json();
     activeRide = ride.request_id;
@@ -134,7 +136,7 @@ requestButton.addEventListener('click', async () => {
 
 cancelButton.addEventListener('click', async () => {
   if (!activeRide) return;
-  await fetch(`/v1/requests/${activeRide}`, { method: 'DELETE' });
+  await fetch(`/v1/requests/${activeRide}`, { method: 'DELETE', headers: { Authorization: `Bearer ${sessionStorage.getItem('passenger_token') || ''}` } });
   await refreshRide();
 });
 

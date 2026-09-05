@@ -18,6 +18,7 @@ const rides = new Map();
 const driverApplications = new Map();
 const loginCodes = new Map();
 const passengers = new Map();
+const authAttempts = new Map();
 const DRIVER_RIDE_FEE_CENTS = 100;
 const documentsDir = path.join(__dirname, 'storage', 'documents');
 fs.mkdirSync(documentsDir, { recursive: true });
@@ -64,6 +65,32 @@ function requireAdmin(request, response) {
     json(response, 401, { error: 'Autenticação administrativa necessária' });
     return false;
   }
+}
+
+function passengerToken(request) {
+  const token = request.headers.authorization?.replace(/^Bearer\s+/i, '');
+  try {
+    const claims = jwt.verify(token, jwtSecret);
+    return claims.role === 'passenger' ? claims : null;
+  } catch {
+    return null;
+  }
+}
+
+function requirePassenger(request, response) {
+  if (process.env.NODE_ENV !== 'production') return true;
+  if (passengerToken(request)) return true;
+  json(response, 401, { error: 'Autenticação de passageiro necessária' });
+  return false;
+}
+
+function rateLimitAuth(phone) {
+  const now = Date.now();
+  const recent = authAttempts.get(phone)?.filter(timestamp => now - timestamp < 15 * 60 * 1000) || [];
+  if (recent.length >= 5) return false;
+  recent.push(now);
+  authAttempts.set(phone, recent);
+  return true;
 }
 
 function readDriverMultipart(request, applicationId) {
@@ -149,6 +176,8 @@ const server = http.createServer(async (request, response) => {
       const body = await readBody(request);
       const phone = String(body.phone || '').replace(/\D/g, '');
       if (phone.length < 10) return json(response, 400, { error: 'Informe um celular válido' });
+      if (!rateLimitAuth(phone)) return json(response, 429, { error: 'Limite de tentativas atingido. Tente novamente mais tarde.' });
+      if (process.env.NODE_ENV === 'production' && !process.env.SMS_PROVIDER) return json(response, 503, { error: 'Provedor de SMS ainda não configurado' });
       const code = '016016';
       loginCodes.set(phone, code);
       return json(response, 200, { accepted: true, channel: 'sms_or_whatsapp', ...(process.env.NODE_ENV !== 'production' ? { demo_code: code } : {}) });
@@ -226,6 +255,7 @@ const server = http.createServer(async (request, response) => {
       return json(response, 200, await routeBetween(origin, destination));
     }
     if (request.method === 'POST' && url.pathname === '/v1/requests') {
+      if (!requirePassenger(request, response)) return;
       const body = await readBody(request);
       const id = infrastructure.pool ? crypto.randomUUID() : `ride_${crypto.randomUUID().slice(0, 8)}`;
       const origin = { lat: Number(body.start_lat ?? body.origin_lat), lng: Number(body.start_lng ?? body.origin_lng) };
@@ -267,10 +297,12 @@ const server = http.createServer(async (request, response) => {
       return json(response, 200, ride);
     }
     if (request.method === 'GET' && rideMatch) {
+      if (!requirePassenger(request, response)) return;
       const ride = rides.get(rideMatch[1]);
       return ride ? json(response, 200, ride) : json(response, 404, { error: 'Corrida não encontrada' });
     }
     if (request.method === 'DELETE' && rideMatch) {
+      if (!requirePassenger(request, response)) return;
       const ride = rides.get(rideMatch[1]);
       if (!ride) return json(response, 404, { error: 'Corrida não encontrada' });
       ride.status = 'cancelled'; ride.updated_at = new Date().toISOString();

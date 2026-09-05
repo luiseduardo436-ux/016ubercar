@@ -5,6 +5,7 @@ services:
     plan: free
     region: ohio
     healthCheckPath: /health
+    preDeployCommand: npm run migrate
     autoDeploy: true
     domains:
       - 016ubercar.com.br
