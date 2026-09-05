@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "016 Ubercar",
+    "slug": "016-ubercar",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "ubercar",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.016ubercar.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "O 016 Ubercar usa sua localização para encontrar corridas e mostrar o motorista no mapa.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "O 016 Ubercar usa sua localização durante uma corrida ativa."
+      }
+    },
+    "plugins": ["expo-location"]
+  }
+}

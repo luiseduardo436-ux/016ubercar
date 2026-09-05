@@ -1,0 +1,21 @@
+{
+  "name": "016-ubercar-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MVP demonstrável do 016 Ubercar com API estilo Uber",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.13.2",
+    "@azure/storage-blob": "^12.33.0",
+    "bcryptjs": "^3.0.3",
+    "busboy": "^1.6.0",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "redis": "^6.2.1",
+    "ws": "^8.21.3"
+  }
+}

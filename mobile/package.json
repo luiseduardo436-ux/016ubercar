@@ -1,0 +1,18 @@
+{
+  "name": "016-ubercar-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "android": "expo start --android"
+  },
+  "dependencies": {
+    "expo": "~53.0.0",
+    "expo-location": "~18.1.0",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-maps": "1.20.1"
+  }
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>016 Ubercar</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/map.css"><link rel="stylesheet" href="/passenger.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script></head>
+<body>
+  <main class="shell">
+    <section class="hero"><div class="brand"><span class="mark">016</span><span>ubercar</span></div><span class="live"><i></i> Ribeirão Preto e região</span><h1>Seu caminho começa<br><em>aqui.</em></h1><p>Mobilidade local, simples e confiável.</p></section>
+    <section class="panel">
+      <header class="app-bar"><a class="brand dark" href="/">016 <span>ubercar</span></a><nav><a href="/login.html">Entrar</a><a href="/driver.html">Sou motorista</a><a href="/admin.html">Operação</a></nav></header>
+      <div class="eyebrow">Peça uma viagem</div>
+      <div class="field"><span class="dot origin"></span><label>Origem<input id="origin" list="cities" value="Centro, Ribeirão Preto - SP"></label></div>
+      <div class="connector"></div>
+      <div class="field"><span class="pin"></span><label>Destino<input id="destination" list="cities" value="RibeirãoShopping, Ribeirão Preto - SP"></label></div>
+      <datalist id="cities"><option value="Ribeirão Preto - SP"></option><option value="Sertãozinho - SP"></option><option value="Serrana - SP"></option><option value="Cravinhos - SP"></option><option value="Batatais - SP"></option><option value="Brodowski - SP"></option><option value="Jardinópolis - SP"></option><option value="Dumont - SP"></option><option value="Pradópolis - SP"></option><option value="Barrinha - SP"></option><option value="Jaboticabal - SP"></option><option value="Bebedouro - SP"></option><option value="Franca - SP"></option><option value="Barretos - SP"></option></datalist>
+      <div id="map" aria-label="Mapa da rota"></div>
+      <div class="map-loading" id="map-loading" aria-live="polite">Carregando mapa da região...</div>
+      <div class="ride-options" role="group" aria-label="Opções da viagem"><button class="ride-option active" type="button">Embarcar agora</button><button class="ride-option" type="button">Para mim</button></div>
+      <div class="estimate" id="estimate"><span>R$ 6,25 por km</span><strong>Consulte o valor</strong></div>
+      <div class="payment"><span>Pagamento</span><button id="payment">Pix <b>⌄</b></button></div>
+      <button class="primary" id="request">Encontrar motorista <span>→</span></button>
+      <button class="cancel hidden" id="cancel">Cancelar solicitação</button>
+      <div class="ride-status hidden" id="status"></div>
+    </section>
+    <section class="trust"><div><strong>4.9</strong><span>nota média</span></div><div><strong>24h</strong><span>atendimento</span></div><div><strong>100%</strong><span>feito localmente</span></div></section>
+  </main>
+  <section class="service-band"><div class="service-intro"><p class="eyebrow">Uma plataforma local</p><h2>Mais caminhos para<br><em>seguir em frente.</em></h2></div><div class="service-grid"><article class="service-card"><span class="service-number">01</span><div><h3>Viaje</h3><p>Corridas transparentes para todos os seus destinos no DDD 016.</p><a href="#map">Solicitar corrida →</a></div></article><article class="service-card"><span class="service-number">02</span><div><h3>Dirija</h3><p>Escolha seus horários, conheça seus ganhos e rode pela sua região.</p><a href="/driver-register.html">Seja parceiro →</a></div></article><article class="service-card"><span class="service-number">03</span><div><h3>Para negócios</h3><p>Mobilidade organizada para equipes e empresas locais.</p><a href="mailto:contato@016ubercar.local">Falar com a equipe →</a></div></article></div></section><footer class="home-footer"><p>016 ubercar</p><span>Mobilidade feita perto de você · Região DDD 016</span></footer>
+  <script src="/app.js"></script>
+</body></html>

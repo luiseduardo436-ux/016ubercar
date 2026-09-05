@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: 016ubercar
+    runtime: docker
+    plan: free
+    region: ohio
+    healthCheckPath: /health
+    autoDeploy: true
+    domains:
+      - 016ubercar.com.br
+      - www.016ubercar.com.br
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_BASE_URL
+        value: https://016ubercar.com.br
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 016ubercar-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: 016ubercar-redis
+          property: connectionString
+      - key: MAP_PROVIDER
+        value: osrm
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+
+  - type: redis
+    name: 016ubercar-redis
+    plan: free
+    region: ohio
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: 016ubercar-db
+    databaseName: ubercar
+    user: ubercar
+    plan: free
+    region: ohio

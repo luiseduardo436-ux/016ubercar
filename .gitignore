@@ -1,0 +1,9 @@
+.env
+node_modules/
+*.log
+certs/*.p12
+certs/*.pem
+certs/*.key
+storage/documents/*
+mobile/.expo/
+mobile/node_modules/

@@ -1,0 +1,359 @@
+openapi: 3.0.1
+info:
+  title: 016 Ubercar - API de Compatibilidade (MVP)
+  version: 1.0.0
+  description: |
+    Contrato próprio do 016 Ubercar com formato compatível com os endpoints públicos de mobilidade da Uber.
+    Esta especificação não acessa nem replica a API interna da Uber. O gateway traduz estes endpoints
+    para os serviços internos do 016 Ubercar. Integrações com a Uber devem usar somente a API oficial,
+    com aplicativo cadastrado, credenciais OAuth e autorização conforme os termos da Uber.
+servers:
+  - url: https://api.016ubercar.com
+    description: Produção
+  - url: https://staging.api.016ubercar.com
+    description: Staging
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: string
+        display_name:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+          format: float
+    PriceEstimate:
+      type: object
+      properties:
+        product_id:
+          type: string
+        low_estimate:
+          type: number
+          format: float
+        high_estimate:
+          type: number
+          format: float
+        currency:
+          type: string
+    RequestCreate:
+      type: object
+      required: [product_id, start_lat, start_lng, end_lat, end_lng]
+      properties:
+        product_id: { type: string }
+        start_lat: { type: number, format: double }
+        start_lng: { type: number, format: double }
+        end_lat: { type: number, format: double }
+        end_lng: { type: number, format: double }
+        payment_method_id: { type: string }
+        surge_confirmation: { type: string, nullable: true }
+    DriverSummary:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        rating: { type: number }
+        plate: { type: string }
+        vehicle: { type: string }
+    RideStatusResponse:
+      type: object
+      properties:
+        request_id: { type: string }
+        status: { type: string }
+        driver: { $ref: '#/components/schemas/DriverSummary' }
+        eta_seconds: { type: integer }
+        location:
+          type: object
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+paths:
+  /oauth/token:
+    post:
+      summary: Exchange credentials for token (OAuth2)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type: { type: string }
+                username: { type: string }
+                password: { type: string }
+                client_id: { type: string }
+                client_secret: { type: string }
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /oauth/introspect:
+    get:
+      summary: Introspect token validity
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active: { type: boolean }
+                  scope: { type: string }
+  /v1/products:
+    get:
+      summary: List available products (vehicle types) near a location
+      parameters:
+        - in: query
+          name: latitude
+          required: true
+          schema: { type: number }
+        - in: query
+          name: longitude
+          required: true
+          schema: { type: number }
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /v1/estimates/price:
+    get:
+      summary: Get price estimates for route
+      parameters:
+        - in: query
+          name: start_lat
+          required: true
+          schema: { type: number }
+        - in: query
+          name: start_lng
+          required: true
+          schema: { type: number }
+        - in: query
+          name: end_lat
+          required: true
+          schema: { type: number }
+        - in: query
+          name: end_lng
+          required: true
+          schema: { type: number }
+      responses:
+        '200':
+          description: Price estimates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PriceEstimate'
+  /v1/maps/route:
+    get:
+      summary: Calculate route, distance and ETA between two coordinates
+      parameters:
+        - in: query
+          name: start_lat
+          required: true
+          schema: { type: number, format: double }
+        - in: query
+          name: start_lng
+          required: true
+          schema: { type: number, format: double }
+        - in: query
+          name: end_lat
+          required: true
+          schema: { type: number, format: double }
+        - in: query
+          name: end_lng
+          required: true
+          schema: { type: number, format: double }
+      responses:
+        '200':
+          description: Route result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distance_km: { type: number }
+                  duration_seconds: { type: integer }
+                  geometry: { type: object }
+        '400':
+          description: Invalid coordinates
+  /v1/requests:
+    post:
+      summary: Create a ride request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestCreate'
+      responses:
+        '201':
+          description: Request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  request_id: { type: string }
+                  status: { type: string }
+                  eta_seconds: { type: integer }
+  /v1/requests/{request_id}:
+    get:
+      summary: Get ride/request status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: request_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ride status and driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RideStatusResponse'
+    delete:
+      summary: Cancel a ride request
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: request_id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Cancelled
+  /v1/requests/{request_id}/receipt:
+    get:
+      summary: Get receipt for a completed ride
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: request_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ride_id: { type: string }
+                  amount: { type: number }
+                  currency: { type: string }
+                  breakdown: { type: object }
+  /v1/history:
+    get:
+      summary: List user's ride history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        '200':
+          description: History
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ride_id: { type: string }
+                    started_at: { type: string }
+                    finished_at: { type: string }
+                    amount: { type: number }
+  /v1/drivers/{driver_id}/status:
+    get:
+      summary: Get driver status
+      parameters:
+        - in: path
+          name: driver_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Driver status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  online: { type: boolean }
+                  current_ride_id: { type: string, nullable: true }
+  /v1/drivers/{driver_id}/location:
+    post:
+      summary: Post driver location (server-side integration)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat: { type: number }
+                lng: { type: number }
+                heading: { type: number }
+                speed: { type: number }
+      responses:
+        '202':
+          description: Accepted
+
+x-realtime:
+  websocket: wss://api.016ubercar.com/v1/realtime
+  auth: Bearer token in initial handshake
+  channels:
+    - user:{user_id}
+    - ride:{ride_id}
+    - driver:{driver_id}
+  messages:
+    - type: ride.requested
+    - type: ride.accepted
+    - type: driver.location
+    - type: ride.status_changed
+
